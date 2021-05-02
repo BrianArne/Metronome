@@ -12,8 +12,15 @@
 
 #include <JuceHeader.h>
 
+
+//==============================================================================
 class MetronomeLookAndFeel : public juce::LookAndFeel_V4
 {
 public:
+    //==============================================================================
+    
+    /**
+     Constructor for Metronome look and feel used to set 'hacker' style coloring to the application
+     */
     MetronomeLookAndFeel();
 };

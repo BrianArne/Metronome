@@ -10,13 +10,8 @@
 
 #include "PongState.h"
 
-PongState::PongState() : m_isPlaying(false), m_previousBar(0), m_isDownBeat(true), m_isReversed(false)
+//==============================================================================
+PongState::PongState() : m_isPlaying(false),  m_isDownBeat(true), m_isReversed(false)
 {
-    m_leadingEdge = 1;
-    
-}
 
-PongState::~PongState()
-{
-    
 }
