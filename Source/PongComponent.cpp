@@ -14,7 +14,7 @@ PongComponent::PongComponent()
 {
     setSize(75,200);
     setFramesPerSecond(100);
-    initializeGradientArea();
+    initializeGradientArea(m_state);
 }
 
 void PongComponent::paint(juce::Graphics& g)
@@ -42,10 +42,10 @@ void PongComponent::update()
     
 }
 
-void PongComponent::initializeGradientArea()
+void PongComponent::initializeGradientArea(PongState& state)
 {
     auto localBounds = getLocalBounds();
-    m_gradient.setRectangle(juce::Rectangle<int>(localBounds.getX(), localBounds.getY(), 5, localBounds.getHeight()));
+    m_gradient.setRectangle(state, juce::Rectangle<int>(localBounds.getX(), localBounds.getY(), 5, localBounds.getHeight()));
 }
 
 PongComponent::MovingGradient::MovingGradient(){}

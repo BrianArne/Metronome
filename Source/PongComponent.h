@@ -52,8 +52,10 @@ public:
     
     /**
      On creation of the PongComponent, this is called to set the m_gradient space to be a rectangle fully to the left occupying 5pc of space
+     
+     @param state   The state the component will be initialized with. Currently the defualt m_state that is constructed on creation of a PongComponent
      */
-    void initializeGradientArea();
+    void initializeGradientArea(PongState& state);
    
     /**
      A class that represents a moving line.The line bounces back and forth between a component rectangle striking each side of the rectangle at a user requested interval.
