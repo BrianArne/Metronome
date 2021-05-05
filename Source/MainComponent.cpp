@@ -3,39 +3,28 @@
 //==============================================================================
 MainComponent::MainComponent()
 {
-    // Make sure you set the size of the component after
-    // you add any child components.
-    //getLookAndFeel().setColour(juce::Slider::ColourIds::textBoxOutlineColourId, juce::Colours::transparentBlack);
-
-    gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
-    gainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    gainSlider.setRange(-50, 50, 0.5);
-    
-
-    tempoSlider.setSliderStyle(juce::Slider::IncDecButtons);
-    tempoSlider.setTextBoxStyle(juce::Slider::TextBoxAbove, false, 200, 200);
-    tempoSlider.setRange(0, 1000, 1);
-    tempoSlider.setValue(160, juce::NotificationType::dontSendNotification);
-    //setColour(juce::Slider::ColourIds::textBoxOutlineColourId, juce::Colours::black);
-    tempoSlider.setLookAndFeel(&m_lookAndFeel);
-    gainSlider.setLookAndFeel(&m_lookAndFeel);
-    addAndMakeVisible(gainSlider);
-    addAndMakeVisible(tempoSlider);
-    
-    // Make Gain Horizontal
-    /*
-    s = createSlider (false);
-    s->setSliderStyle (Slider::LinearBarVertical);
-    s->setTextBoxStyle (Slider::NoTextBox, false, 0, 0);
-    sliderArea.removeFromLeft (20);
-    s->setBounds (sliderArea.removeFromLeft (20));
-    s->setPopupDisplayEnabled (true, true, this);
-    s->setTextValueSuffix (" mickles in a muckle");
-    */
-    
-    addAndMakeVisible(pongDisplay);
-
     setSize (300, 400);
+   
+
+    m_gainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
+    m_gainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
+    m_gainSlider.setRange(-50, 50, 0.5);
+    m_gainSlider.setLookAndFeel(&m_lookAndFeel);
+
+    
+    m_tempoSlider.setSliderStyle(juce::Slider::IncDecButtons);
+    m_tempoSlider.setTextBoxStyle(juce::Slider::TextBoxAbove, false, 200, 200);
+    m_tempoSlider.setRange(0, 1000, 1);
+    m_tempoSlider.setValue(160, juce::NotificationType::dontSendNotification);
+    m_tempoSlider.setLookAndFeel(&m_lookAndFeel);
+    
+    m_playButton.setButtonText("Play");
+    m_playButton.addListener(this);
+
+    addAndMakeVisible(m_gainSlider);
+    addAndMakeVisible(m_tempoSlider);
+    addAndMakeVisible(pongDisplay);
+    addAndMakeVisible(m_playButton);
 
     // Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
@@ -108,13 +97,32 @@ void MainComponent::resized()
     auto topHalf = getLocalBounds().removeFromTop(getLocalBounds().getHeight() / 2);
     auto topLeftGain = topHalf.removeFromLeft(topHalf.getWidth() / 3);
     
-    gainSlider.setBounds(topLeftGain);
-    tempoSlider.setBounds(topHalf);
-    pongDisplay.setBounds(getLocalBounds().removeFromBottom(getLocalBounds().getHeight()/2));
+    m_gainSlider.setBounds(topLeftGain);
+    m_tempoSlider.setBounds(topHalf);
+    pongDisplay.setBounds(getLocalBounds().removeFromBottom(getLocalBounds().getHeight()/1.75));
+    m_playButton.setBounds(getLocalBounds().removeFromBottom(getLocalBounds().getHeight()/8));
 }
 
+//==============================================================================
 void MainComponent::sliderValueChanged(juce::Slider *slider)
 {
-    if (slider == &gainSlider) gain = slider->getValue();
-    if (slider == &tempoSlider) tempo = slider->getValue();
+    if (slider == &m_gainSlider) m_gain = slider->getValue();
+    if (slider == &m_tempoSlider) m_tempo = slider->getValue();
+}
+
+void MainComponent::buttonClicked(juce::Button* button)
+{
+    if( button == &m_playButton){
+        switch (pongDisplay.getState())
+        {
+            case PongComponent::State::STOPPED:
+                pongDisplay.changeState(PongComponent::State::STARTING);
+                m_playButton.setButtonText("Stop");
+                break;
+            case PongComponent::State::PLAYING:
+                pongDisplay.changeState(PongComponent::State::STOPPING);
+                m_playButton.setButtonText("Play");
+                break;
+        }
+    }
 }

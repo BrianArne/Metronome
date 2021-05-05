@@ -39,3 +39,4 @@ struct PongState{
     bool m_isDownBeat;
     bool m_isReversed;
 };
+

@@ -13,21 +13,30 @@
 #include <JuceHeader.h>
 #include "PongState.h"
 
-
 /**
- TODO: Document this
- <A class for....>
- 
- Important methods and functionality
- 
- @see <optional><Related Classes or Methods>
+ A class for drawing a moving line that hits the sides of the components at a given interval. Used to represent a metronome pendulum.
  */
-//==============================================================================
+//=============================================================================_=
 class PongComponent : public juce::AnimatedAppComponent
 {
 
 public:
     //==============================================================================
+    /**
+     TODO: Document this
+     <A class for....>
+     
+     Important methods and functionality
+     
+     @see <optional><Related Classes or Methods>
+     */
+    enum State{
+        STOPPED,
+        STARTING,
+        PLAYING,
+        STOPPING
+    };
+
     /**
      Constructor on a PongComponent.
      
@@ -51,12 +60,37 @@ public:
     void update() override;
     
     /**
+     TODO: Update for new state implementation
      On creation of the PongComponent, this is called to set the m_gradient space to be a rectangle fully to the left occupying 5pc of space
      
      @param state   The state the component will be initialized with. Currently the defualt m_state that is constructed on creation of a PongComponent
      */
-    void initializeGradientArea(PongState& state);
+    void initializeGradientArea();
    
+    /**     TODO: Document this
+     <Genearl idea of function>
+     
+     Pre,Post considerattions
+     
+     @param <name>    function
+     ...
+     @param onLeft   if true, the label will stay on the left of its component; if
+     false, it will stay above it.
+     */
+    void changeState(State state);
+   
+    /**     TODO: Document this
+     <Genearl idea of function>
+     
+     Pre,Post considerattions
+     
+     @param <name>    function
+     ...
+     @param onLeft   if true, the label will stay on the left of its component; if
+     false, it will stay above it.
+     */
+    PongComponent::State getState();
+    
     /**
      A class that represents a moving line.The line bounces back and forth between a component rectangle striking each side of the rectangle at a user requested interval.
 
@@ -98,39 +132,43 @@ public:
              Called by the paint() function of the owning component the MovingGradient to move the drawn gradient in a timely fashion. Calling this fuction
              will call setColourGradient() as well to keep the space being drawn and the gradient space being drawn in sync.
              */
-            void updateRectangle(PongState& m_state, int newX, int newY, int newWidth, int newHeight);
+            void updateRectangle(int newX, int newY, int newWidth, int newHeight, bool isReversed);
         
             /**
+             TODO: Update for bool isReversed
              Sets the m_Rectangle to a supplied rectangle space. Needs a PongState as well for when this function calls setColourGradient()
 
              @param PongState&    State of the Pong component
              @param rec  A rectangle representing the space the MovingGradient should be drawn withing
              false, it will stay above it.
              */
-            void setRectangle(PongState& m_state, juce::Rectangle<int> rec);
+            void setRectangle(juce::Rectangle<int> rec, bool isReversed);
             
             /**
              Returns the m_colourGradient drawn by the owning component paint() function
              */
             juce::ColourGradient getColourGradient();
-        
+
         private:
             //==============================================================================
             /**
+             TODO: Update for isReversed
              Sets the m_colourGradient according the m_rectangle and the PongState passed to the updateRectangle() or setRectangle()
 
              @param m_state    PongState that the owning PongComponent is in
              */
-            void setColourGradient(PongState& m_state);
+            void setColourGradient(bool isReversed);
 
             juce::Rectangle<int> m_rectangle;
             juce::ColourGradient m_colourGradient;
             int m_gradientWidth;
     };
-
+    
 private:
     //==============================================================================
     MovingGradient m_gradient;
     juce::Colour m_paintColour;
     PongState m_state;
+    State m_newState;
+    bool m_isReversed;
 };
