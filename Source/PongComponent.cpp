@@ -12,39 +12,30 @@
 
 PongComponent::PongComponent() : m_newState(State::STOPPED), m_isReversed(false)
 {
-    //TODO: Change so no size is set here. PongCompo is owned by MainComponent and wont' know it's size on construction
-    // The initizlizeGradientArea is dependent on this though
-    setSize(300, 200);
     setFramesPerSecond(100);
-    //TODO: Remove
-    //initializeGradientArea(m_state);
 }
 
 void PongComponent::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
 
-    // TODO: Check if m_state.m_isPlaying to see if we needed to update the visual. If not just exit
+    // Rectangle is drawn whether playing or not. ChangeState() will set the rectangle to 0,0,0,0 if not playing
+    auto lastRec = m_gradient.getRectangle();
+    if(lastRec.getRight() == getLocalBounds().getRight()){
+        m_isReversed = true;
+    }else if(lastRec.getX() == 0){
+        m_isReversed = false;
+    }
 
-    // Checks if we need to reverse the moving gradient
-    //if (m_newState == State::PLAYING){
-        auto lastRec = m_gradient.getRectangle();
-        if(lastRec.getRight() == getLocalBounds().getRight()){
-            m_isReversed = true;
-        }else if(lastRec.getX() == 0){
-            m_isReversed = false;
-        }
-        
-        // Updates the gradient
-        m_gradient.updateRectangle(lastRec.getX(), lastRec.getY(), 10, lastRec.getHeight(), m_isReversed);
-        g.setGradientFill(m_gradient.getColourGradient());
-        g.fillRect(m_gradient.getRectangle());
-        //DBG(getWidth());
-    //}
+    m_gradient.updateRectangle(lastRec.getX(), lastRec.getY(), 10, lastRec.getHeight(), m_isReversed);
+    g.setGradientFill(m_gradient.getColourGradient());
+    g.fillRect(m_gradient.getRectangle());
 }
 
 void PongComponent::update()
 {
+    
+    // Called at interval that is set by setFramesPerSecond()
     //TODO: Within this method we could check to see how much the rectangle/component should be moved
     /*
     function() that returns how many pixels are covered per mIlliseconds passed
@@ -108,10 +99,11 @@ juce::Rectangle<int> PongComponent::MovingGradient::getRectangle()
 
 void PongComponent::MovingGradient::updateRectangle(int newX, int newY, int newWidth, int newHeight, bool isReversed)
 {
-    if(isReversed){
-        m_rectangle.setBounds(newX-1, newY, newWidth, newHeight);
+    int updateVal = isReversed ? -10 : 10;
+    if (newWidth != 0){
+        m_rectangle.setBounds(newX+updateVal, newY, newWidth, newHeight);
     }else{
-        m_rectangle.setBounds(newX+1, newY, newWidth, newHeight);
+        m_rectangle.setBounds(newX, newY, newWidth, newHeight);
     }
     setColourGradient(isReversed);
 }
@@ -131,9 +123,9 @@ void PongComponent::MovingGradient::setColourGradient(const bool isReversed)
 {
     if(isReversed){
         m_colourGradient = juce::ColourGradient::horizontal(juce::Colours::black, m_rectangle.getRight(),
-                                                            juce::Colours::mediumvioletred, m_rectangle.getX());
+                                                            juce::Colours::limegreen, m_rectangle.getX());
     }else{
         m_colourGradient = juce::ColourGradient::horizontal(juce::Colours::black, m_rectangle.getX(),
-                                                        juce::Colours::mediumvioletred, m_rectangle.getRight());
+                                                        juce::Colours::limegreen, m_rectangle.getRight());
     }
 }

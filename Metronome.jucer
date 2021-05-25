@@ -4,12 +4,11 @@
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1">
   <MAINGROUP id="uPFEtN" name="Metronome">
     <GROUP id="{0B3B0E22-29CC-30D7-942B-B31C457E1D90}" name="Source">
+      <FILE id="CsvfxF" name="ToDo.cpp" compile="1" resource="0" file="Source/ToDo.cpp"/>
       <FILE id="ZmXt9X" name="MetronomeLookAndFeel.cpp" compile="1" resource="0"
             file="Source/MetronomeLookAndFeel.cpp"/>
       <FILE id="aJlV9w" name="MetronomeLookAndFeel.h" compile="0" resource="0"
             file="Source/MetronomeLookAndFeel.h"/>
-      <FILE id="b32GrQ" name="PongState.cpp" compile="1" resource="0" file="Source/PongState.cpp"/>
-      <FILE id="XV1RbK" name="PongState.h" compile="0" resource="0" file="Source/PongState.h"/>
       <FILE id="lsCTEL" name="PongComponent.cpp" compile="1" resource="0"
             file="Source/PongComponent.cpp"/>
       <FILE id="JsTcO3" name="PongComponent.h" compile="0" resource="0" file="Source/PongComponent.h"/>

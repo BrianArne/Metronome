@@ -11,7 +11,6 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "PongState.h"
 
 /**
  A class for drawing a moving line that hits the sides of the components at a given interval. Used to represent a metronome pendulum.
@@ -23,12 +22,9 @@ class PongComponent : public juce::AnimatedAppComponent
 public:
     //==============================================================================
     /**
-     TODO: Document this
-     <A class for....>
-     
-     Important methods and functionality
-     
-     @see <optional><Related Classes or Methods>
+     Enum representing the state the metronome can be in
+
+     @see changeState();
      */
     enum State{
         STOPPED,
@@ -40,7 +36,7 @@ public:
     /**
      Constructor on a PongComponent.
      
-     Defaults component size to 75 X 200 with a framerate of 100. Calls initializeGradientArea() to set up the MovingGradient owned by the PongComponent
+     Framerate of 100.
      */
     PongComponent();
     virtual ~PongComponent() = default;
@@ -60,34 +56,19 @@ public:
     void update() override;
     
     /**
-     TODO: Update for new state implementation
-     On creation of the PongComponent, this is called to set the m_gradient space to be a rectangle fully to the left occupying 5pc of space
-     
-     @param state   The state the component will be initialized with. Currently the defualt m_state that is constructed on creation of a PongComponent
+     Called when the metronome state is changed to STARTING so the moving gradient can be initialized
      */
     void initializeGradientArea();
    
-    /**     TODO: Document this
-     <Genearl idea of function>
+    /**
+     Called when the state of the metronome is changed.
      
-     Pre,Post considerattions
-     
-     @param <name>    function
-     ...
-     @param onLeft   if true, the label will stay on the left of its component; if
-     false, it will stay above it.
+     @param state    the state the metronome will be changed to
      */
     void changeState(State state);
    
-    /**     TODO: Document this
-     <Genearl idea of function>
-     
-     Pre,Post considerattions
-     
-     @param <name>    function
-     ...
-     @param onLeft   if true, the label will stay on the left of its component; if
-     false, it will stay above it.
+    /**
+     Returns the state the metronome is in
      */
     PongComponent::State getState();
     
@@ -135,7 +116,6 @@ public:
             void updateRectangle(int newX, int newY, int newWidth, int newHeight, bool isReversed);
         
             /**
-             TODO: Update for bool isReversed
              Sets the m_Rectangle to a supplied rectangle space. Needs a PongState as well for when this function calls setColourGradient()
 
              @param PongState&    State of the Pong component
@@ -152,7 +132,6 @@ public:
         private:
             //==============================================================================
             /**
-             TODO: Update for isReversed
              Sets the m_colourGradient according the m_rectangle and the PongState passed to the updateRectangle() or setRectangle()
 
              @param m_state    PongState that the owning PongComponent is in
@@ -168,7 +147,6 @@ private:
     //==============================================================================
     MovingGradient m_gradient;
     juce::Colour m_paintColour;
-    PongState m_state;
     State m_newState;
     bool m_isReversed;
 };

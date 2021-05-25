@@ -10,6 +10,8 @@
     your controls and content.
 */
 class MainComponent  :  public juce::AudioAppComponent,
+                        public juce::KeyListener,
+                        public juce::Label::Listener,
                         public juce::Slider::Listener,
                         public juce::Button::Listener
 {
@@ -28,6 +30,19 @@ public:
     void resized() override;
     
     //==============================================================================
+   
+    /**     TODO: Document this
+     <Genearl idea of function>
+     
+     Pre,Post considerattions
+     
+     @param <name>    function
+     ...
+     @param onLeft   if true, the label will stay on the left of its component; if
+     false, it will stay above it.
+     */
+    bool keyPressed (const juce::KeyPress &key, juce::Component *originatingComponent) override;
+    
     /**     TODO: Document this
      <Genearl idea of function>
      
@@ -52,19 +67,33 @@ public:
      */
     void buttonClicked(juce::Button* button) override;
     
+    /**     TODO: Document this
+     <Genearl idea of function>
+     
+     Pre,Post considerattions
+     
+     @param <name>    function
+     ...
+     @param onLeft   if true, the label will stay on the left of its component; if
+     false, it will stay above it.
+     */
+    void tempoValueChanged();
+    
+    void labelTextChanged(juce::Label *labelThatHasChanged) override;
+    
 
 private:
     //==============================================================================
-    // Your private member variables go here...
     MetronomeLookAndFeel m_lookAndFeel;
     
     juce::TextButton m_playButton;
     
     juce::Slider m_gainSlider;
-    juce::Slider m_tempoSlider;
+    juce::Label m_tempoLabel;
+    
     std::atomic<int> m_tempo;
     std::atomic<int> m_gain;
     
-    PongComponent pongDisplay;
+    PongComponent m_pongDisplay;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
