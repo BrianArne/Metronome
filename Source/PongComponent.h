@@ -22,7 +22,7 @@ class PongComponent : public juce::AnimatedAppComponent
 public:
     //==============================================================================
     /**
-     Enum representing the state the metronome can be in
+     Enum representing the state a metronome can be in
 
      @see changeState();
      */
@@ -36,36 +36,60 @@ public:
     /**
      Constructor on a PongComponent.
      
-     Framerate of 100.
+     Framerate of 300.
      */
     PongComponent();
     virtual ~PongComponent() = default;
     
     //==============================================================================
     /**
-     Paints the PongComponent. Manages the MovingGradient can change the PongState owned by the PongComponent. Makes calls to updateRectangle()
-     to alter the position of the MovingGradient.
-     
-     Coloring of the component happens here as well.
+     Paints the PongComponent. Paints the MovingGradient according to where it should be if playing by caling calcX();
+
      */
     void paint(juce::Graphics& G) override;
    
     /**
+     If the metronome is playing, the m_timePassed is accumulated here.
+     
+     reverse() will be called if the accumulated time is larger than the alloted millisecPerBeat
+
      @See AnimatedAppComponent::update()
      */
     void update() override;
     
     /**
-     Called when the metronome state is changed to STARTING so the moving gradient can be initialized
+     The owning parent component, MainComponent, will call this function when the label is changed by a user. tempoChanged() calls calcMilliSecPerBeat to update the member variable m_millisecPerBeat used in update()
+     
+     @param newTempo a new tempo value pulled from the tempo label in MainComponent
      */
-    void initializeGradientArea();
+    void tempoChanged(const int newTempo);
+    
+    /**
+     Calculates millisecPerBeat for a given tempo
+     
+     @param tempo tempo that we need the milliseconds per beat from
+     */
+    float calcMillisecPerBeat(const int tempo);
    
     /**
      Called when the state of the metronome is changed.
      
-     @param state    the state the metronome will be changed to
+     @param state    The state the metronome will be changed to
      */
     void changeState(State state);
+   
+    /**
+     Reverses the direction of m_isReversed
+     
+     TODO: Look into this
+     updates m_timePassed for some reason
+     */
+    void reverse();
+    
+    /**
+     Determines where the x coordinate of the MovingGradient rectangle should be
+     */
+    int calcX();
    
     /**
      Returns the state the metronome is in
@@ -95,16 +119,6 @@ public:
             ~MovingGradient() = default;
         
             /**
-             Potential solution to for creating a softer 'bounce' of a MovingGradient().
-             */
-            void reduceGradientSize();
-        
-            /**
-             Potential solution to for creating a softer 'bounce' of a MovingGradient().
-             */
-            void increaseGradientSize();
-            
-            /**
              Returns the m_rectangle that represents the Gradient space being drawn
              */
             juce::Rectangle<int> getRectangle();
@@ -113,14 +127,13 @@ public:
              Called by the paint() function of the owning component the MovingGradient to move the drawn gradient in a timely fashion. Calling this fuction
              will call setColourGradient() as well to keep the space being drawn and the gradient space being drawn in sync.
              */
-            void updateRectangle(int newX, int newY, int newWidth, int newHeight, bool isReversed);
+            void updateRectangle(int x, int y, int width, int height, bool isReversed);
         
             /**
              Sets the m_Rectangle to a supplied rectangle space. Needs a PongState as well for when this function calls setColourGradient()
 
-             @param PongState&    State of the Pong component
              @param rec  A rectangle representing the space the MovingGradient should be drawn withing
-             false, it will stay above it.
+             @param isReversed Determines which directiong the MovingGradient is moving. False == Left->Right, True == Right->Left
              */
             void setRectangle(juce::Rectangle<int> rec, bool isReversed);
             
@@ -140,13 +153,15 @@ public:
 
             juce::Rectangle<int> m_rectangle;
             juce::ColourGradient m_colourGradient;
-            int m_gradientWidth;
     };
     
 private:
     //==============================================================================
+    State m_newState;
     MovingGradient m_gradient;
     juce::Colour m_paintColour;
-    State m_newState;
+
     bool m_isReversed;
+    float m_timePassed; // Accumulated time while playing to determine x coordinate of the MovingGradient
+    float m_millisecPerBeat;
 };

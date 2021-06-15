@@ -14,9 +14,9 @@ MainComponent::MainComponent()
     m_tempoLabel.setJustificationType(juce::Justification::centred);
     m_tempoLabel.setFont(juce::Font(140));
     m_tempoLabel.setEditable(false);
-    m_tempoLabel.onTextChange = [this] { tempoValueChanged(); };
     m_tempoLabel.addListener(this);
     m_tempoLabel.setLookAndFeel(&m_lookAndFeel);
+    m_pongDisplay.tempoChanged(120);
 
     m_playButton.setButtonText("Play");
     m_playButton.setLookAndFeel(&m_lookAndFeel);
@@ -83,12 +83,7 @@ void MainComponent::releaseResources()
 //==============================================================================
 void MainComponent::paint (juce::Graphics& g)
 {
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
-    //setColour(juce::Slider::ColourIds::textBoxOutlineColourId, juce::Colours::black);
-    //g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));
     g.fillAll (juce::Colours::black);
-
-    // You can add your drawing code here!
 }
 
 void MainComponent::resized()
@@ -107,43 +102,49 @@ void MainComponent::resized()
 
 bool MainComponent::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
 {
-    // TODO: Need to update the atmoic<int> gain value after setting/before setting text
+    // TODO: Doe we need to change to getIntValue() from the label? Why do we have floats where?
     float labelVal = m_tempoLabel.getText().getFloatValue();
     if (key == juce::KeyPress::upKey){
         m_pongDisplay.changeState(PongComponent::State::STOPPING);
         m_playButton.setButtonText("Play");
-        if (labelVal >= 496.f){
-            m_tempoLabel.setText(juce::String(500.f), juce::NotificationType::sendNotification);
+        if (labelVal >= 296.f){
+            m_tempoLabel.setText(juce::String(300.f), juce::NotificationType::sendNotification);
         }else{
             m_tempoLabel.setText(juce::String(labelVal+5.0f), juce::NotificationType::sendNotification);
         }
+        return true;
     }else if (key == juce::KeyPress::downKey){
         m_pongDisplay.changeState(PongComponent::State::STOPPING);
         m_playButton.setButtonText("Play");
-        if (labelVal <= 4.f){
-            m_tempoLabel.setText(juce::String(0.f), juce::NotificationType::sendNotification);
+        if (labelVal <= 5.f){
+            m_tempoLabel.setText(juce::String(1.f), juce::NotificationType::sendNotification);
         }else{
             m_tempoLabel.setText(juce::String(labelVal-5.0f), juce::NotificationType::sendNotification);
         }
+        return true;
     }else if (key == juce::KeyPress::leftKey){
         m_pongDisplay.changeState(PongComponent::State::STOPPING);
         m_playButton.setButtonText("Play");
         if (labelVal <= 1.f){
-            m_tempoLabel.setText(juce::String(0.f), juce::NotificationType::sendNotification);
+            m_tempoLabel.setText(juce::String(1.f), juce::NotificationType::sendNotification);
         }else{
             m_tempoLabel.setText(juce::String(labelVal-1.0f), juce::NotificationType::sendNotification);
         }
+        return true;
     }else if (key == juce::KeyPress::rightKey){
         m_pongDisplay.changeState(PongComponent::State::STOPPING);
         m_playButton.setButtonText("Play");
-        if (labelVal >= 499.f){
-            m_tempoLabel.setText(juce::String(500.f), juce::NotificationType::sendNotification);
+        if (labelVal >= 299.f){
+            m_tempoLabel.setText(juce::String(300.f), juce::NotificationType::sendNotification);
         }else{
             m_tempoLabel.setText(juce::String(labelVal+1.0f), juce::NotificationType::sendNotification);
         }
+        return true;
     }else if (key == juce::KeyPress::spaceKey){
         buttonClicked(&m_playButton);
+        return true;
     }
+    return false;
 }
 
 void MainComponent::sliderValueChanged(juce::Slider *slider)
@@ -164,16 +165,17 @@ void MainComponent::buttonClicked(juce::Button* button)
                 m_pongDisplay.changeState(PongComponent::State::STOPPING);
                 m_playButton.setButtonText("Play");
                 break;
+            default:
+                break;
         }
     }
 }
 
-void MainComponent::tempoValueChanged()
-{
-    
-}
-
 void MainComponent::labelTextChanged(juce::Label *labelThatHasChanged)
 {
-    
+    //TODO: update the atomic, push down to PongComponent;
+    if (labelThatHasChanged == &m_tempoLabel){
+        m_tempo = labelThatHasChanged->getText().getIntValue();
+        m_pongDisplay.tempoChanged(m_tempo.load());
+    }
 }

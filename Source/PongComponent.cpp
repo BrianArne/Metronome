@@ -9,45 +9,44 @@
 */
 
 #include "PongComponent.h"
+#define GRADIENT_WIDTH 50
 
-PongComponent::PongComponent() : m_newState(State::STOPPED), m_isReversed(false)
+PongComponent::PongComponent() : m_newState(State::STOPPED), m_isReversed(false), m_timePassed(0.f), m_millisecPerBeat(0.f)
 {
-    setFramesPerSecond(100);
+    setFramesPerSecond(300);
+    auto localBounds = getLocalBounds();
+    m_gradient.setRectangle(juce::Rectangle<int>(localBounds.getX(), localBounds.getY(), GRADIENT_WIDTH, localBounds.getHeight()), m_isReversed);
 }
 
 void PongComponent::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
 
-    // Rectangle is drawn whether playing or not. ChangeState() will set the rectangle to 0,0,0,0 if not playing
-    auto lastRec = m_gradient.getRectangle();
-    if(lastRec.getRight() == getLocalBounds().getRight()){
-        m_isReversed = true;
-    }else if(lastRec.getX() == 0){
-        m_isReversed = false;
+    if (getState() == PongComponent::PLAYING){
+        m_gradient.updateRectangle(calcX(), getLocalBounds().getY(), GRADIENT_WIDTH, getLocalBounds().getHeight(), m_isReversed);
+        g.setGradientFill(m_gradient.getColourGradient());
+        g.fillRect(m_gradient.getRectangle());
     }
-
-    m_gradient.updateRectangle(lastRec.getX(), lastRec.getY(), 10, lastRec.getHeight(), m_isReversed);
-    g.setGradientFill(m_gradient.getColourGradient());
-    g.fillRect(m_gradient.getRectangle());
 }
 
 void PongComponent::update()
 {
-    
-    // Called at interval that is set by setFramesPerSecond()
-    //TODO: Within this method we could check to see how much the rectangle/component should be moved
-    /*
-    function() that returns how many pixels are covered per mIlliseconds passed
-    getMillisecondsSinceLastUpdate();
-     */
-
+    if (getState() == PongComponent::PLAYING){
+        m_timePassed += getMillisecondsSinceLastUpdate();
+        if (m_timePassed > m_millisecPerBeat) {
+            reverse();
+        };
+    }
 }
 
-void PongComponent::initializeGradientArea()
+void PongComponent::tempoChanged(const int newTempo)
 {
-    auto localBounds = getLocalBounds();
-    m_gradient.setRectangle(juce::Rectangle<int>(localBounds.getX(), localBounds.getY(), 5, localBounds.getHeight()), m_isReversed);
+    m_millisecPerBeat = calcMillisecPerBeat(newTempo);
+}
+
+float PongComponent::calcMillisecPerBeat(const int tempo)
+{
+    return (1000.f / (static_cast<float>(tempo) / 60.f));
 }
 
 void PongComponent::changeState(State state)
@@ -57,10 +56,10 @@ void PongComponent::changeState(State state)
         switch(m_newState)
         {
             case STOPPED:
-                m_gradient.updateRectangle(0, 0, 0, 0, false);
+                m_timePassed = 0.f;
+                m_isReversed = false;
                 break;
             case STARTING:
-                initializeGradientArea();
                 changeState(PLAYING);
                 break;
             case PLAYING:
@@ -77,34 +76,36 @@ PongComponent::State PongComponent::getState()
     return m_newState;
 }
 
+void PongComponent::reverse()
+{
+    m_isReversed = !m_isReversed;
+    m_timePassed -= m_timePassed;
+}
+
+int PongComponent::calcX()
+{
+    float percentage = m_timePassed / m_millisecPerBeat;
+    percentage = percentage - static_cast<int>(percentage);
+    if (m_isReversed){
+        return  getLocalBounds().getRight()-GRADIENT_WIDTH - static_cast<int>((getWidth()-GRADIENT_WIDTH) * percentage);
+    }else{
+        return static_cast<int>((getWidth()-GRADIENT_WIDTH) * percentage);
+    }
+}
+
+//==============================================================================
+
 PongComponent::MovingGradient::MovingGradient(){}
 
-void PongComponent::MovingGradient::reduceGradientSize()
-{
-    //TODO: Implement or remove, do we want to reduce the size
-    //      once the bar has hit the end? or continue to bounce
-    //      it back, not reduce
-}
-
-void PongComponent::MovingGradient::increaseGradientSize()
-{
-    //TODO: Implement or remove, do we want to increase the size
-    //      once the bar has bounced back?
-}
 
 juce::Rectangle<int> PongComponent::MovingGradient::getRectangle()
 {
     return m_rectangle;
 }
 
-void PongComponent::MovingGradient::updateRectangle(int newX, int newY, int newWidth, int newHeight, bool isReversed)
+void PongComponent::MovingGradient::updateRectangle(int x, int y, int width, int height, bool isReversed)
 {
-    int updateVal = isReversed ? -10 : 10;
-    if (newWidth != 0){
-        m_rectangle.setBounds(newX+updateVal, newY, newWidth, newHeight);
-    }else{
-        m_rectangle.setBounds(newX, newY, newWidth, newHeight);
-    }
+    m_rectangle.setBounds(x, y, width, height);//}
     setColourGradient(isReversed);
 }
 

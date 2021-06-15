@@ -77,8 +77,6 @@ public:
      @param onLeft   if true, the label will stay on the left of its component; if
      false, it will stay above it.
      */
-    void tempoValueChanged();
-    
     void labelTextChanged(juce::Label *labelThatHasChanged) override;
     
 
