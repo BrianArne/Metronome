@@ -23,7 +23,7 @@ void PongComponent::paint(juce::Graphics& g)
     g.fillAll(juce::Colours::black);
 
     if (getState() == PongComponent::PLAYING){
-        m_gradient.updateRectangle(calcX(), getLocalBounds().getY(), GRADIENT_WIDTH, getLocalBounds().getHeight(), m_isReversed);
+        m_gradient.updateRectangle(m_xCoordinate, getLocalBounds().getY(), GRADIENT_WIDTH, getLocalBounds().getHeight(), m_isReversed);
         g.setGradientFill(m_gradient.getColourGradient());
         g.fillRect(m_gradient.getRectangle());
     }
@@ -37,6 +37,7 @@ void PongComponent::update()
             reverse();
         };
     }
+    m_xCoordinate = calcX();
 }
 
 void PongComponent::tempoChanged(const int newTempo)
@@ -79,13 +80,16 @@ PongComponent::State PongComponent::getState()
 void PongComponent::reverse()
 {
     m_isReversed = !m_isReversed;
-    m_timePassed -= m_timePassed;
+    m_timePassed -= m_millisecPerBeat;
+
 }
 
 int PongComponent::calcX()
 {
     float percentage = m_timePassed / m_millisecPerBeat;
-    percentage = percentage - static_cast<int>(percentage);
+    if (percentage != 1.f){
+        percentage = percentage - static_cast<int>(percentage);
+    }
     if (m_isReversed){
         return  getLocalBounds().getRight()-GRADIENT_WIDTH - static_cast<int>((getWidth()-GRADIENT_WIDTH) * percentage);
     }else{

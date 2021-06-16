@@ -81,8 +81,7 @@ public:
     /**
      Reverses the direction of m_isReversed
      
-     TODO: Look into this
-     updates m_timePassed for some reason
+     Updates m_timePassed by subtracting m_millisecPerBeat so we don't get overflow if the metronome runs for a long time
      */
     void reverse();
     
@@ -164,4 +163,5 @@ private:
     bool m_isReversed;
     float m_timePassed; // Accumulated time while playing to determine x coordinate of the MovingGradient
     float m_millisecPerBeat;
+    int m_xCoordinate;
 };
