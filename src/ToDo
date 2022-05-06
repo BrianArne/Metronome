@@ -1,0 +1,16 @@
+///////////
+// TODO  //
+///////////
+
+- Implement SamplePlayBack
+- Implement Gain
+- Implement click that doesn't stop when a button is pressed // tempo is updated
+  - onValueChanged() -> update SamplePlayBack or MainComponent::samplesPerClick
+
+
+///////////
+// IDEAS //
+///////////
+
+-Make the color change as the tempo increases
+
