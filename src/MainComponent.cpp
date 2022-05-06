@@ -13,7 +13,7 @@ juce::AudioBuffer<float> createSampleBuffer(juce::WavAudioFormat& wavFormat) {
     reader->read(&clickBuffer, 0, clickBuffer.getNumSamples(), 0, true, true);
     return clickBuffer;
 }
-};
+}
 
 MainComponent::MainComponent() : mSamplePlayback(createSampleBuffer(mFormat))
 {
@@ -200,6 +200,11 @@ bool MainComponent::keyPressed(const juce::KeyPress &key, juce::Component *origi
     return false;
 }
 
+bool MainComponent::keyPressed(const juce::KeyPress &key)
+{
+    return true;
+}
+
 void MainComponent::sliderValueChanged(juce::Slider *slider)
 {
     if (slider == &mGainSlider) mGain = slider->getValue();
@@ -210,6 +215,8 @@ void MainComponent::buttonClicked(juce::Button* button)
     if( button == &mPlayButton){
         switch (mPongDisplay.getState())
         {
+            case PongComponent::State::STARTING:
+                break;
             case PongComponent::State::STOPPED:
                 mPongDisplay.changeState(PongComponent::State::STARTING);
                 mPlayButton.setButtonText("Stop");
@@ -217,6 +224,8 @@ void MainComponent::buttonClicked(juce::Button* button)
             case PongComponent::State::PLAYING:
                 mPongDisplay.changeState(PongComponent::State::STOPPING);
                 mPlayButton.setButtonText("Play");
+                break;
+            case PongComponent::State::STOPPING:
                 break;
             default:
                 break;

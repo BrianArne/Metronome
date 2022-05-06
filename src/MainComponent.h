@@ -28,7 +28,7 @@ public:
     //==============================================================================
     using juce::KeyListener::keyPressed;
     bool keyPressed (const juce::KeyPress &key, juce::Component *originatingComponent) override;
-    bool keyStateChanged(bool keyIsDown, Component* originatingComponent) override;
+    bool keyPressed (const juce::KeyPress &key) override;
     void sliderValueChanged(juce::Slider* slider) override;
     void buttonClicked(juce::Button* button) override;
     void labelTextChanged(juce::Label *labelThatHasChanged) override;
@@ -52,7 +52,7 @@ private:
     juce::Label mTempoLabel;
     
     std::atomic<int> mTempo;
-    std::atomic<int> mGain;
+    std::atomic<double> mGain;
     double mSampleRate;
     int mSampleAccumulator;
     int mSamplesPerClick;

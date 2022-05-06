@@ -24,7 +24,7 @@ public:
     };
 
     PongComponent();
-    virtual ~PongComponent() = default;
+    //virtual ~PongComponent() = default;
     
     void paint(juce::Graphics& G) override;
     void update() override;
