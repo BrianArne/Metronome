@@ -98,6 +98,7 @@ void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& buffe
     //  - Connection to slider val how? Listener to slider?
     //
     //
+    mSamplePlayback.processBuffer(bufferToFill);
     
     auto numInputChannels = mClickBuffer.getNumChannels();
     auto numOutChannels = bufferToFill.buffer->getNumChannels();
@@ -241,6 +242,7 @@ void MainComponent::labelTextChanged(juce::Label *labelThatHasChanged)
         mPongDisplay.tempoChanged(mTempo.load());
     }
     mSamplesPerClick = samplesPerClick(mTempo);
+    mSamplePlayback.tempoChanged(mTempo.load());
 }
 
 int MainComponent::samplesPerClick(const int tempo){

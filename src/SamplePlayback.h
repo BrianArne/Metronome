@@ -12,19 +12,25 @@
 
 class SamplePlayback {
 public:
-    
-    SamplePlayback(const juce::AudioBuffer<float> sampleBuffer);
-    ~SamplePlayback();
-    
-    bool processBuffer(juce::AudioBuffer<float>& buffer);
-    bool updateTempo(int tempo);
+    SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer, const int sampleRate);
+    ~SamplePlayback() override;
+   
+    //==============================================================================
+
+    bool processBuffer(juce::AudioSourceChannelInfo& bufferToFill);
+    void tempoChanged(const int newTempo);
     
 private:
-    void updateSample();
+    //==============================================================================
+
+    void samplesPerClick(const int tempo);
     
-    int mSample;
+    //==============================================================================
     
-    
-    
+    using AudioBufferPtr = std::unique_ptr<juce::AudioBuffer<float>>;
+    AudioBufferPtr mClickSoundBuffer;
+    int mCurrentSample;
+    int mSamplesBetweenClicks;
+    int mSampleRate;
 };
 
