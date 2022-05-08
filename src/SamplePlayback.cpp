@@ -10,12 +10,12 @@
 
 #include "SamplePlayback.h"
 
-SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer, const int sampleRate) : mClickSoundBuffer(std::move(sampleBuffer)),
-    mSampleRate(sampleRate)
+SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer) : mClickSoundBuffer(std::move(sampleBuffer))
 {
+    
 }
 
-bool SamplePlayback::processBuffer(juce::AudioSourceChannelInfo& bufferToFill)
+bool SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToFill)
 {
     /*
    // auto numInputChannels = mClickBuffer.getNumChannels();
@@ -44,6 +44,13 @@ bool SamplePlayback::processBuffer(juce::AudioSourceChannelInfo& bufferToFill)
         }
     }
    */
+}
+
+void SamplePlayback::setSampleRate(const int sampleRate)
+{
+    if (mSampleRate == sampleRate)
+        return;
+    mSampleRate = sampleRate;
 }
 
 void SamplePlayback::tempoChanged(const int newTempo)

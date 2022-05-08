@@ -12,12 +12,13 @@
 
 class SamplePlayback {
 public:
-    SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer, const int sampleRate);
-    ~SamplePlayback() override;
+    SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer);
+    ~SamplePlayback() = default;
    
     //==============================================================================
 
-    bool processBuffer(juce::AudioSourceChannelInfo& bufferToFill);
+    bool processBuffer(const juce::AudioSourceChannelInfo& bufferToFill);
+    void setSampleRate(const int sampleRate);
     void tempoChanged(const int newTempo);
     
 private:
