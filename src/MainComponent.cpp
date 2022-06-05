@@ -5,7 +5,6 @@
 
 namespace {
 std::unique_ptr<juce::AudioBuffer<float>> createSampleBuffer(juce::WavAudioFormat& wavFormat) {
-    juce::WavAudioFormat m_wavFormat;
     auto* inputStream  = new juce::MemoryInputStream(BinaryData::Click_wav, BinaryData::Click_wavSize, false);
     std::unique_ptr<juce::AudioFormatReader> reader(wavFormat.createReaderFor(inputStream, false));
     auto clickBuffer = std::make_unique<juce::AudioBuffer<float>>(static_cast<int>(reader->numChannels), static_cast<int>(reader->lengthInSamples));
@@ -19,8 +18,6 @@ std::unique_ptr<juce::AudioBuffer<float>> createSampleBuffer(juce::WavAudioForma
 
 MainComponent::MainComponent() : mSamplePlayback(createSampleBuffer(mFormat))
 {
-    
-    // TODO: Initaialize SamplePlayback class
     setSize (300, 400);
    
     mGainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
@@ -34,6 +31,7 @@ MainComponent::MainComponent() : mSamplePlayback(createSampleBuffer(mFormat))
     mTempoLabel.setEditable(false);
     mTempoLabel.addListener(this);
     mTempoLabel.setLookAndFeel(&mLookAndFeel);
+    mSamplePlayback.tempoChanged(120);
     mPongDisplay.tempoChanged(120);
 
     mPlayButton.setButtonText("Play");
@@ -68,64 +66,18 @@ MainComponent::~MainComponent()
 }
 
 //==============================================================================
-void MainComponent::prepareToPlay (int samplesPerBlockExpected, double sampleRate)
+void MainComponent::prepareToPlay (int /*samplesPerBlockExpected*/, double sampleRate)
 {
-    
-    auto* inputStream  = new juce::MemoryInputStream(BinaryData::Click_wav, BinaryData::Click_wavSize, false);
-    std::unique_ptr<juce::AudioFormatReader> reader(mFormat.createReaderFor(inputStream, false));
-    juce::AudioBuffer<float> clickBuffer(static_cast<int>(reader->numChannels), static_cast<int>(reader->lengthInSamples));
-    clickBuffer.clear();
-    reader->read(&clickBuffer, 0, clickBuffer.getNumSamples(), 0, true, true);
-    mClickBuffer.makeCopyOf(clickBuffer);
-    mPosition = 0;
-    
-    // TODO: Check if we need this
-    mSampleRate = sampleRate;
+    mSamplePlayback.setSampleRate(sampleRate);
+    // Tempo isn't loaded yet by the time prepareToPlay is called()
+    mSamplePlayback.tempoChanged(120);
 }
 
 void MainComponent::getNextAudioBlock (const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    // Your audio-processing code goes here!
-
-    // For more details, see the help for AudioProcessor::getNextAudioBlock()
-
-    // Right now we are not producing any data, in which case we need to clear the buffer
-    // (to prevent the output of random noise)
-    
-    // NEEDED CLASSES
-    //
-    // Sample/time based wave file player
-    // Determines time that we play a sampled sound.
-    //  -Should it hold the met file?
-    //  - Connection to slider val how? Listener to slider?
-    //
-    //
+    if (mPlayState == PongComponent::State::STOPPED)
+        return;
     mSamplePlayback.processBuffer(bufferToFill);
-    
-    auto numInputChannels = mClickBuffer.getNumChannels();
-    auto numOutChannels = bufferToFill.buffer->getNumChannels();
-    
-    auto outputSamplesRemaining = bufferToFill.numSamples;
-    auto outputSamplesOffset = bufferToFill.startSample;
-    
-    while ( outputSamplesRemaining > 0 ){
-        auto bufferSamplesRemaining = mClickBuffer.getNumSamples() - mPosition;
-        auto samplesThisTime = juce::jmin(outputSamplesRemaining, bufferSamplesRemaining);
-        
-        for ( auto channel = 0; channel < numOutChannels; ++channel)
-        {
-            bufferToFill.buffer->copyFrom(channel, outputSamplesOffset, mClickBuffer, channel % numInputChannels, mPosition, samplesThisTime);
-        }
-        outputSamplesRemaining -= samplesThisTime;
-        outputSamplesOffset += samplesThisTime;
-        mPosition += samplesThisTime;
-        
-        if ( mPosition == mClickBuffer.getNumSamples() )
-        {
-            mPosition = 0;
-        }
-    }
-    
 }
 
 void MainComponent::releaseResources()
@@ -156,7 +108,7 @@ void MainComponent::resized()
 
 //==============================================================================
 
-bool MainComponent::keyPressed(const juce::KeyPress &key, juce::Component *originatingComponent)
+bool MainComponent::keyPressed(const juce::KeyPress &key, juce::Component* /*originatingComponent*/)
 {
     // TODO: Doe we need to change to getIntValue() from the label? Why do we have floats where?
     float labelVal = mTempoLabel.getText().getFloatValue();
@@ -203,11 +155,6 @@ bool MainComponent::keyPressed(const juce::KeyPress &key, juce::Component *origi
     return false;
 }
 
-bool MainComponent::keyPressed(const juce::KeyPress &key)
-{
-    return true;
-}
-
 void MainComponent::sliderValueChanged(juce::Slider *slider)
 {
     if (slider == &mGainSlider) mGain = slider->getValue();
@@ -222,10 +169,13 @@ void MainComponent::buttonClicked(juce::Button* button)
                 break;
             case PongComponent::State::STOPPED:
                 mPongDisplay.changeState(PongComponent::State::STARTING);
+                mPlayState = PongComponent::State::PLAYING;
                 mPlayButton.setButtonText("Stop");
                 break;
             case PongComponent::State::PLAYING:
+                mSamplePlayback.resetSamplePlayback();
                 mPongDisplay.changeState(PongComponent::State::STOPPING);
+                mPlayState = PongComponent::State::STOPPED;
                 mPlayButton.setButtonText("Play");
                 break;
             case PongComponent::State::STOPPING:
@@ -243,11 +193,7 @@ void MainComponent::labelTextChanged(juce::Label *labelThatHasChanged)
         mTempo = labelThatHasChanged->getText().getIntValue();
         mPongDisplay.tempoChanged(mTempo.load());
     }
-    mSamplesPerClick = samplesPerClick(mTempo);
+    // TODO: We can remove here
+    //mSamplesPerClick = samplesPerClick(mTempo);
     mSamplePlayback.tempoChanged(mTempo.load());
-}
-
-int MainComponent::samplesPerClick(const int tempo){
-    double secondsPerClick = static_cast<double>(tempo) / 60.f;
-    return static_cast<int>(mSampleRate * secondsPerClick);
 }

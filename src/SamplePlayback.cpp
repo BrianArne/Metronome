@@ -10,43 +10,74 @@
 
 #include "SamplePlayback.h"
 
-SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer) : mClickSoundBuffer(std::move(sampleBuffer))
+SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer)
+    : mClickSoundBuffer(std::move(sampleBuffer))
+    , mSampleIndex(0)
+    , mSamplesAccumulated(0)
+    , mSamplesBetweenClicks(0)
 {
-    
 }
 
-bool SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToFill)
+void SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    /*
-   // auto numInputChannels = mClickBuffer.getNumChannels();
     auto numInputChannels = mClickSoundBuffer->getNumChannels();
-    
     auto numOutChannels = bufferToFill.buffer->getNumChannels();
     
-    auto outputSamplesRemaining = bufferToFill.numSamples;
+    auto numSamples = bufferToFill.numSamples;
     auto outputSamplesOffset = bufferToFill.startSample;
     
-    while ( outputSamplesRemaining > 0 ){
-        auto bufferSamplesRemaining = mClickSoundBuffer->getNumSamples() - mPosition;
-        auto samplesThisTime = juce::jmin(outputSamplesRemaining, bufferSamplesRemaining);
+    // If number samples to fill plus accumulated still is less that needed samples
+    // fill the whole buffer with silence and update AccumulatedSamples
+    if (mSamplesAccumulated + numSamples <= mSamplesBetweenClicks){
+        bufferToFill.buffer->clear(outputSamplesOffset, numSamples);
+        mSamplesAccumulated += numSamples;
+        return;
+    } else {
+        // Fill with silence till we need samples
+        int samplesTillClick = mSamplesBetweenClicks - mSamplesAccumulated;
         
-        for ( auto channel = 0; channel < numOutChannels; ++channel)
-        {
-            bufferToFill.buffer->copyFrom(channel, outputSamplesOffset, mClickBuffer.get(), channel % numInputChannels, mPosition, samplesThisTime);
+        if (!(samplesTillClick < 0) && samplesTillClick < numSamples){
+            // TODO: Update accumulated samples
+            bufferToFill.buffer->clear(outputSamplesOffset, samplesTillClick);
+            outputSamplesOffset += samplesTillClick;
+            numSamples -= samplesTillClick;
+            mSamplesAccumulated += samplesTillClick;
         }
-        outputSamplesRemaining -= samplesThisTime;
-        outputSamplesOffset += samplesThisTime;
-        mPosition += samplesThisTime;
         
-        if ( mPosition == mClickBuffer->getNumSamples() )
-        {
-            mPosition = 0;
+        if (numSamples > 0 ) {
+            // TODO: Sample accumulated should return to zero until after
+            // mSamplesAccumulated == samplesTillClick + mClickSoundBuffer.getNumSamples();
+            
+            // Calculate how many samples from clickBuffer to put into audioBuffer
+            auto bufferSamplesRemaining = mClickSoundBuffer->getNumSamples() - mSampleIndex;
+            
+            auto clickSamplesAvailable = juce::jmin(numSamples, bufferSamplesRemaining);
+            
+            // TODO: Zero out if we have played all the samples we need, and update accumulator
+            // TODO: Update accumulated samples
+            // Zero out if we have played all we need
+            
+            for ( auto channel = 0; channel < numOutChannels; ++channel)
+            {
+                // Changed to channel 0 for destination, but is it 1?
+                bufferToFill.buffer->copyFrom(channel, outputSamplesOffset, *(mClickSoundBuffer.get()), channel % numInputChannels, mSampleIndex, clickSamplesAvailable);
+            }
+            
+            // Update state
+            // TODO: Update accumulated samples
+            mSampleIndex += clickSamplesAvailable;
+            numSamples -= clickSamplesAvailable;
+            outputSamplesOffset += clickSamplesAvailable;
+            //mSampleIndex += clickSamplesAvailable;
+            if (mSampleIndex == mClickSoundBuffer->getNumSamples()) {
+                mSamplesAccumulated = 0;
+                mSampleIndex = 0;
+            }
         }
     }
-   */
 }
 
-void SamplePlayback::setSampleRate(const int sampleRate)
+void SamplePlayback::setSampleRate(const double sampleRate)
 {
     if (mSampleRate == sampleRate)
         return;
@@ -55,12 +86,21 @@ void SamplePlayback::setSampleRate(const int sampleRate)
 
 void SamplePlayback::tempoChanged(const int newTempo)
 {
-    samplesPerClick(newTempo);
+    // This should be a pure function
+    mSamplesBetweenClicks = samplesPerClick(newTempo);
+    mSampleIndex = 0;
+    mSamplesAccumulated = 0;
+}
+
+void SamplePlayback::resetSamplePlayback()
+{
+    mSampleIndex = 0;
+    mSamplesAccumulated = 0;
 }
 
 
-void SamplePlayback::samplesPerClick(const int tempo)
+int SamplePlayback::samplesPerClick(const int tempo)
 {
-    double secondsPerClick = static_cast<double>(tempo) / 60.f;
-    mSamplesBetweenClicks = static_cast<int>(mSampleRate * secondsPerClick);
+    double secondsPerClick = 60.f / static_cast<double>(tempo);
+    return static_cast<int>(mSampleRate * secondsPerClick);
 }

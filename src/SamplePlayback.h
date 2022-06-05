@@ -16,22 +16,20 @@ public:
     ~SamplePlayback() = default;
    
     //==============================================================================
-
-    bool processBuffer(const juce::AudioSourceChannelInfo& bufferToFill);
-    void setSampleRate(const int sampleRate);
+    void processBuffer(const juce::AudioSourceChannelInfo& bufferToFill);
+    void setSampleRate(const double sampleRate);
     void tempoChanged(const int newTempo);
+    void resetSamplePlayback();
     
 private:
     //==============================================================================
-
-    void samplesPerClick(const int tempo);
+    int samplesPerClick(const int tempo);
     
     //==============================================================================
-    
     using AudioBufferPtr = std::unique_ptr<juce::AudioBuffer<float>>;
     AudioBufferPtr mClickSoundBuffer;
-    int mCurrentSample;
+    double mSampleRate;
+    int mSampleIndex;
+    int mSamplesAccumulated;
     int mSamplesBetweenClicks;
-    int mSampleRate;
 };
-

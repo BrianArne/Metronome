@@ -26,39 +26,31 @@ public:
     void resized() override;
     
     //==============================================================================
-    using juce::KeyListener::keyPressed;
+    using juce::Component::keyPressed;
     bool keyPressed (const juce::KeyPress &key, juce::Component *originatingComponent) override;
-    bool keyPressed (const juce::KeyPress &key) override;
     void sliderValueChanged(juce::Slider* slider) override;
     void buttonClicked(juce::Button* button) override;
     void labelTextChanged(juce::Label *labelThatHasChanged) override;
-    int samplesPerClick(const int tempo);
 
 private:
     //==============================================================================
     
     // AUDIO
     juce::WavAudioFormat mFormat;
-    juce::AudioBuffer<float> mClickBuffer;
-    int mPosition;
-
+    PongComponent::State mPlayState;
     
     //GUI
     MetronomeLookAndFeel mLookAndFeel;
-    
     juce::TextButton mPlayButton;
-    
     juce::Slider mGainSlider;
     juce::Label mTempoLabel;
     
-    std::atomic<int> mTempo;
     std::atomic<double> mGain;
-    double mSampleRate;
-    int mSampleAccumulator;
-    int mSamplesPerClick;
-    int mClickSampleIndex;
+    juce::AudioBuffer<float> mClickBuffer;
+    std::atomic<int> mTempo;
     
     PongComponent mPongDisplay;
     SamplePlayback mSamplePlayback;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
