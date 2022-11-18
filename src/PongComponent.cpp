@@ -13,7 +13,7 @@
 
 PongComponent::PongComponent() : mNewState(State::STOPPED), mReversed(false), mTimePassed(0.f), mMillisecPerBeat(0.f)
 {
-    setFramesPerSecond(500);
+    setFramesPerSecond(150);
     auto localBounds = getLocalBounds();
     mGradient.setRectangle(juce::Rectangle<int>(localBounds.getX(), localBounds.getY(), GRADIENT_WIDTH, localBounds.getHeight()), mReversed);
 }

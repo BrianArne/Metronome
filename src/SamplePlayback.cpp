@@ -12,6 +12,7 @@
 
 SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer)
     : mClickSoundBuffer(std::move(sampleBuffer))
+    , mIsPlaying(false)
     , mSampleIndex(0)
     , mSamplesAccumulated(0)
     , mSamplesBetweenClicks(0)
@@ -26,53 +27,33 @@ void SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToF
     auto numSamples = bufferToFill.numSamples;
     auto outputSamplesOffset = bufferToFill.startSample;
     
-    // If number samples to fill plus accumulated still is less that needed samples
-    // fill the whole buffer with silence and update AccumulatedSamples
-    if (mSamplesAccumulated + numSamples <= mSamplesBetweenClicks){
-        bufferToFill.buffer->clear(outputSamplesOffset, numSamples);
-        mSamplesAccumulated += numSamples;
-        return;
-    } else {
-        // Fill with silence till we need samples
-        int samplesTillClick = mSamplesBetweenClicks - mSamplesAccumulated;
-        
-        if (!(samplesTillClick < 0) && samplesTillClick < numSamples){
-            // TODO: Update accumulated samples
-            bufferToFill.buffer->clear(outputSamplesOffset, samplesTillClick);
-            outputSamplesOffset += samplesTillClick;
-            numSamples -= samplesTillClick;
-            mSamplesAccumulated += samplesTillClick;
+    while (numSamples > 0) {
+        if (!mIsPlaying && mSamplesAccumulated == mSamplesBetweenClicks) {
+            std::cout << mSamplesAccumulated << std::endl;
+            mIsPlaying = true;
+            mSamplesAccumulated = 0;
         }
         
-        if (numSamples > 0 ) {
-            // TODO: Sample accumulated should return to zero until after
-            // mSamplesAccumulated == samplesTillClick + mClickSoundBuffer.getNumSamples();
-            
-            // Calculate how many samples from clickBuffer to put into audioBuffer
-            auto bufferSamplesRemaining = mClickSoundBuffer->getNumSamples() - mSampleIndex;
-            
-            auto clickSamplesAvailable = juce::jmin(numSamples, bufferSamplesRemaining);
-            
-            // TODO: Zero out if we have played all the samples we need, and update accumulator
-            // TODO: Update accumulated samples
-            // Zero out if we have played all we need
-            
-            for ( auto channel = 0; channel < numOutChannels; ++channel)
-            {
-                // Changed to channel 0 for destination, but is it 1?
-                bufferToFill.buffer->copyFrom(channel, outputSamplesOffset, *(mClickSoundBuffer.get()), channel % numInputChannels, mSampleIndex, clickSamplesAvailable);
+        for ( auto channel = 0; channel < numOutChannels; ++channel) {
+            if (mIsPlaying) {
+                *(bufferToFill.buffer->getWritePointer(channel, outputSamplesOffset)) = *(mClickSoundBuffer->getReadPointer(0, mSampleIndex));
+            } else {
+                *(bufferToFill.buffer->getWritePointer(channel, outputSamplesOffset)) = 0;
             }
-            
-            // Update state
-            // TODO: Update accumulated samples
-            mSampleIndex += clickSamplesAvailable;
-            numSamples -= clickSamplesAvailable;
-            outputSamplesOffset += clickSamplesAvailable;
-            //mSampleIndex += clickSamplesAvailable;
-            if (mSampleIndex == mClickSoundBuffer->getNumSamples()) {
-                mSamplesAccumulated = 0;
-                mSampleIndex = 0;
-            }
+        }
+        if (mIsPlaying) {
+            mSampleIndex++;
+        }
+        
+        mSamplesAccumulated++;
+        outputSamplesOffset++;
+        
+        numSamples--;
+        
+        // Update mIsPlaying
+        if (mSampleIndex == mClickSoundBuffer->getNumSamples()-1) {
+            mIsPlaying = false;
+            mSampleIndex = 0;
         }
     }
 }
@@ -86,16 +67,17 @@ void SamplePlayback::setSampleRate(const double sampleRate)
 
 void SamplePlayback::tempoChanged(const int newTempo)
 {
-    // This should be a pure function
     mSamplesBetweenClicks = samplesPerClick(newTempo);
     mSampleIndex = 0;
     mSamplesAccumulated = 0;
+    mIsPlaying = false;
 }
 
 void SamplePlayback::resetSamplePlayback()
 {
     mSampleIndex = 0;
     mSamplesAccumulated = 0;
+    mIsPlaying = false;
 }
 
 

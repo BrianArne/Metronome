@@ -9,7 +9,6 @@ std::unique_ptr<juce::AudioBuffer<float>> createSampleBuffer(juce::WavAudioForma
     std::unique_ptr<juce::AudioFormatReader> reader(wavFormat.createReaderFor(inputStream, false));
     auto clickBuffer = std::make_unique<juce::AudioBuffer<float>>(static_cast<int>(reader->numChannels), static_cast<int>(reader->lengthInSamples));
     
-    //juce::AudioBuffer<float> clickBuffer(static_cast<int>(reader->numChannels), static_cast<int>(reader->lengthInSamples));
     clickBuffer->clear();
     reader->read(clickBuffer.get(), 0, clickBuffer->getNumSamples(), 0, true, true);
     return clickBuffer;

@@ -27,8 +27,10 @@ private:
     
     //==============================================================================
     using AudioBufferPtr = std::unique_ptr<juce::AudioBuffer<float>>;
+    
     AudioBufferPtr mClickSoundBuffer;
     double mSampleRate;
+    bool mIsPlaying;
     int mSampleIndex;
     int mSamplesAccumulated;
     int mSamplesBetweenClicks;
