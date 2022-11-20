@@ -12,7 +12,7 @@
 
 class SamplePlayback {
 public:
-    SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer);
+    SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer, std::atomic<double>& gain);
     ~SamplePlayback() = default;
    
     //==============================================================================
@@ -34,4 +34,5 @@ private:
     int mSampleIndex;
     int mSamplesAccumulated;
     int mSamplesBetweenClicks;
+    std::atomic<double>& mGain;
 };

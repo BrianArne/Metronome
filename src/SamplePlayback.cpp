@@ -10,12 +10,13 @@
 
 #include "SamplePlayback.h"
 
-SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer)
+SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer, std::atomic<double>& gain)
     : mClickSoundBuffer(std::move(sampleBuffer))
     , mIsPlaying(false)
     , mSampleIndex(0)
     , mSamplesAccumulated(0)
     , mSamplesBetweenClicks(0)
+    , mGain(gain)
 {
 }
 
@@ -29,14 +30,13 @@ void SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToF
     
     while (numSamples > 0) {
         if (!mIsPlaying && mSamplesAccumulated == mSamplesBetweenClicks) {
-            std::cout << mSamplesAccumulated << std::endl;
             mIsPlaying = true;
             mSamplesAccumulated = 0;
         }
         
         for ( auto channel = 0; channel < numOutChannels; ++channel) {
             if (mIsPlaying) {
-                *(bufferToFill.buffer->getWritePointer(channel, outputSamplesOffset)) = *(mClickSoundBuffer->getReadPointer(0, mSampleIndex));
+                *(bufferToFill.buffer->getWritePointer(channel, outputSamplesOffset)) = *(mClickSoundBuffer->getReadPointer(0, mSampleIndex)) * static_cast<double>(mGain.load());
             } else {
                 *(bufferToFill.buffer->getWritePointer(channel, outputSamplesOffset)) = 0;
             }

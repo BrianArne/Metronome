@@ -15,14 +15,17 @@ std::unique_ptr<juce::AudioBuffer<float>> createSampleBuffer(juce::WavAudioForma
 }
 }
 
-MainComponent::MainComponent() : mSamplePlayback(createSampleBuffer(mFormat))
+MainComponent::MainComponent() :
+mSamplePlayback(createSampleBuffer(mFormat), mGain)
 {
     setSize (300, 400);
    
     mGainSlider.setSliderStyle(juce::Slider::SliderStyle::LinearBarVertical);
     mGainSlider.setTextBoxStyle(juce::Slider::NoTextBox, false, 0, 0);
-    mGainSlider.setRange(-50, 50, 0.5);
+    mGainSlider.setRange(0, 10);
     mGainSlider.setLookAndFeel(&mLookAndFeel);
+    mGainSlider.setValue(1.0);
+    mGainSlider.addListener(this);
 
     mTempoLabel.setText("120", juce::NotificationType::dontSendNotification);
     mTempoLabel.setJustificationType(juce::Justification::centred);
@@ -41,8 +44,8 @@ MainComponent::MainComponent() : mSamplePlayback(createSampleBuffer(mFormat))
 
     addAndMakeVisible(mGainSlider);
     addAndMakeVisible(mTempoLabel);
-    addAndMakeVisible(mPongDisplay);
     addAndMakeVisible(mPlayButton);
+//    addAndMakeVisible(mPongDisplay);
 
     // Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
@@ -96,13 +99,14 @@ void MainComponent::paint (juce::Graphics& g)
 void MainComponent::resized()
 {
     auto localRec = getLocalBounds();
-    auto topHalf = localRec.removeFromTop((getLocalBounds().getHeight() / 2) + (getLocalBounds().getHeight() / 8));
+//    auto topHalf = localRec.removeFromTop((getLocalBounds().getHeight() / 2) + (getLocalBounds().getHeight() / 8));
+    auto topHalf = localRec.removeFromTop((getLocalBounds().getHeight() / 2) + (getLocalBounds().getHeight() / 4));
     auto topLeftGain = topHalf.removeFromLeft(topHalf.getWidth() / 6);
 
     mGainSlider.setBounds(topLeftGain);
     mTempoLabel.setBounds(topHalf);
-    mPlayButton.setBounds(localRec.removeFromTop(localRec.getHeight()/3));
-    mPongDisplay.setBounds(localRec);
+    mPlayButton.setBounds(localRec * .99);
+//    mPongDisplay.setBounds(localRec);
 }
 
 //==============================================================================
