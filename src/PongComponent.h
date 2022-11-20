@@ -23,15 +23,11 @@ public:
         STOPPING
     };
 
-    PongComponent();
-    //virtual ~PongComponent() = default;
+    PongComponent(std::atomic<double>& beatPercentage, std::atomic<bool>& reversed);
     
     void paint(juce::Graphics& G) override;
     void update() override;
-    void tempoChanged(const int newTempo);
-    float calcMillisecPerBeat(const int tempo);
     void changeState(State state);
-    void reverse();
     int calcX();
     PongComponent::State getState();
     
@@ -58,10 +54,7 @@ private:
     State mNewState;
     MovingGradient mGradient;
     juce::Colour mPaintColor;
-
-    bool mReversed;
-    bool mJustReversed;
-    float mTimePassed; // Accumulated time while playing to determine x coordinate of the MovingGradient
-    float mMillisecPerBeat;
+    std::atomic<double>& mBeatPercentage;
+    std::atomic<bool>& mReversed;
     int mXCoordinate;
 };

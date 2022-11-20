@@ -46,8 +46,10 @@ private:
     juce::Label mTempoLabel;
     
     std::atomic<double> mGain;
-    juce::AudioBuffer<float> mClickBuffer;
+    std::atomic<double> mBeatPercentage;
+    std::atomic<bool> mReversed;
     std::atomic<int> mTempo;
+    juce::AudioBuffer<float> mClickBuffer;
     
     PongComponent mPongDisplay;
     SamplePlayback mSamplePlayback;

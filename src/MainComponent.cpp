@@ -16,7 +16,8 @@ std::unique_ptr<juce::AudioBuffer<float>> createSampleBuffer(juce::WavAudioForma
 }
 
 MainComponent::MainComponent() :
-mSamplePlayback(createSampleBuffer(mFormat), mGain)
+    mPongDisplay(mBeatPercentage, mReversed),
+    mSamplePlayback(createSampleBuffer(mFormat), mGain, mBeatPercentage, mReversed)
 {
     setSize (300, 400);
    
@@ -34,7 +35,6 @@ mSamplePlayback(createSampleBuffer(mFormat), mGain)
     mTempoLabel.addListener(this);
     mTempoLabel.setLookAndFeel(&mLookAndFeel);
     mSamplePlayback.tempoChanged(120);
-    mPongDisplay.tempoChanged(120);
 
     mPlayButton.setButtonText("Play");
     mPlayButton.setLookAndFeel(&mLookAndFeel);
@@ -45,7 +45,7 @@ mSamplePlayback(createSampleBuffer(mFormat), mGain)
     addAndMakeVisible(mGainSlider);
     addAndMakeVisible(mTempoLabel);
     addAndMakeVisible(mPlayButton);
-//    addAndMakeVisible(mPongDisplay);
+    addAndMakeVisible(mPongDisplay);
 
     // Some platforms require permissions to open input channels so request that here
     if (juce::RuntimePermissions::isRequired (juce::RuntimePermissions::recordAudio)
@@ -99,14 +99,13 @@ void MainComponent::paint (juce::Graphics& g)
 void MainComponent::resized()
 {
     auto localRec = getLocalBounds();
-//    auto topHalf = localRec.removeFromTop((getLocalBounds().getHeight() / 2) + (getLocalBounds().getHeight() / 8));
-    auto topHalf = localRec.removeFromTop((getLocalBounds().getHeight() / 2) + (getLocalBounds().getHeight() / 4));
+    auto topHalf = localRec.removeFromTop((getLocalBounds().getHeight() / 2) + (getLocalBounds().getHeight() / 8));
     auto topLeftGain = topHalf.removeFromLeft(topHalf.getWidth() / 6);
 
     mGainSlider.setBounds(topLeftGain);
     mTempoLabel.setBounds(topHalf);
-    mPlayButton.setBounds(localRec * .99);
-//    mPongDisplay.setBounds(localRec);
+    mPlayButton.setBounds(localRec.removeFromTop(localRec.getHeight()/3));
+    mPongDisplay.setBounds(localRec);
 }
 
 //==============================================================================
@@ -194,9 +193,6 @@ void MainComponent::labelTextChanged(juce::Label *labelThatHasChanged)
     //TODO: update the atomic, push down to PongComponent;
     if (labelThatHasChanged == &mTempoLabel){
         mTempo = labelThatHasChanged->getText().getIntValue();
-        mPongDisplay.tempoChanged(mTempo.load());
     }
-    // TODO: We can remove here
-    //mSamplesPerClick = samplesPerClick(mTempo);
     mSamplePlayback.tempoChanged(mTempo.load());
 }

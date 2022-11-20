@@ -11,24 +11,21 @@
 #include "PongComponent.h"
 #define GRADIENT_WIDTH 50
 
-PongComponent::PongComponent() : mNewState(State::STOPPED), mReversed(false), mTimePassed(0.f), mMillisecPerBeat(0.f)
+PongComponent::PongComponent(std::atomic<double>& beatPercentage, std::atomic<bool>& reversed) :
+    mNewState(State::STOPPED),
+    mBeatPercentage(beatPercentage),
+    mReversed(reversed)
 {
-    setFramesPerSecond(150);
+    setFramesPerSecond(60);
     auto localBounds = getLocalBounds();
-    mGradient.setRectangle(juce::Rectangle<int>(localBounds.getX(), localBounds.getY(), GRADIENT_WIDTH, localBounds.getHeight()), mReversed);
+    mGradient.setRectangle(juce::Rectangle<int>(localBounds.getX(), localBounds.getY(), GRADIENT_WIDTH, localBounds.getHeight()), mReversed.load());
 }
 
 void PongComponent::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colours::black);
-
-    if (getState() == PongComponent::PLAYING){
-        if (mJustReversed){
-            mGradient.updateRectangle(mXCoordinate, getLocalBounds().getY(), GRADIENT_WIDTH, getLocalBounds().getHeight(), !mReversed);
-            mJustReversed =false;
-        }else{
-            mGradient.updateRectangle(mXCoordinate, getLocalBounds().getY(), GRADIENT_WIDTH, getLocalBounds().getHeight(), mReversed);
-        }
+    if (getState() == PongComponent::PLAYING) {
+        mGradient.updateRectangle(mXCoordinate, getLocalBounds().getY(), GRADIENT_WIDTH, getLocalBounds().getHeight(), mReversed.load());
         g.setGradientFill(mGradient.getColourGradient());
         g.fillRect(mGradient.getRectangle());
     }
@@ -36,34 +33,16 @@ void PongComponent::paint(juce::Graphics& g)
 
 void PongComponent::update()
 {
-    if (getState() == PongComponent::PLAYING){
-        mTimePassed += getMillisecondsSinceLastUpdate();
-        if (mTimePassed > mMillisecPerBeat) {
-            reverse();
-        };
-    }
     mXCoordinate = calcX();
-}
-
-void PongComponent::tempoChanged(const int newTempo)
-{
-    mMillisecPerBeat = calcMillisecPerBeat(newTempo);
-}
-
-float PongComponent::calcMillisecPerBeat(const int tempo)
-{
-    return (1000.f / (static_cast<float>(tempo) / 60.f));
 }
 
 void PongComponent::changeState(State state)
 {
-    if ( mNewState != state){ // m_newState is a poor naming choice, we should swap state and new state naming
+    if (mNewState != state){ // m_newState is a poor naming choice, we should swap state and new state naming
         mNewState = state;
         switch(mNewState)
         {
             case STOPPED:
-                mTimePassed = 0.f;
-                mReversed = false;
                 break;
             case STARTING:
                 changeState(PLAYING);
@@ -82,31 +61,12 @@ PongComponent::State PongComponent::getState()
     return mNewState;
 }
 
-void PongComponent::reverse()
-{
-    mReversed = !mReversed;
-    mTimePassed -= mMillisecPerBeat;
-    mJustReversed = true;
-
-}
-
 int PongComponent::calcX()
 {
-    if (mReversed && mJustReversed){
-        return getWidth()-GRADIENT_WIDTH;
-    }else if (!mReversed && mJustReversed){
-        return 0;
-    }
-
-    float percentage = mTimePassed / mMillisecPerBeat;
-    if (percentage != 1.f){
-        percentage = percentage - static_cast<int>(percentage);
-    }
-    
-    if (mReversed){
-        return  getLocalBounds().getRight()-GRADIENT_WIDTH - static_cast<int>((getWidth()-GRADIENT_WIDTH) * percentage);
+    if (mReversed.load()){
+        return static_cast<int>((getWidth()-GRADIENT_WIDTH) * (1.0 - mBeatPercentage.load()));
     }else{
-        return static_cast<int>((getWidth()-GRADIENT_WIDTH) * percentage);
+        return static_cast<int>((getWidth()-GRADIENT_WIDTH) * mBeatPercentage.load());
     }
 }
 
@@ -122,7 +82,7 @@ juce::Rectangle<int> PongComponent::MovingGradient::getRectangle()
 
 void PongComponent::MovingGradient::updateRectangle(int x, int y, int width, int height, bool isReversed)
 {
-    mRectangle.setBounds(x, y, width, height);//}
+    mRectangle.setBounds(x, y, width, height);
     setColourGradient(isReversed);
 }
 

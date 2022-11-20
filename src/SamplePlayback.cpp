@@ -10,19 +10,20 @@
 
 #include "SamplePlayback.h"
 
-SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer, std::atomic<double>& gain)
+SamplePlayback::SamplePlayback(std::unique_ptr<juce::AudioBuffer<float>> sampleBuffer, std::atomic<double>& gain, std::atomic<double>& beatPercentage, std::atomic<bool>& reversed)
     : mClickSoundBuffer(std::move(sampleBuffer))
     , mIsPlaying(false)
     , mSampleIndex(0)
     , mSamplesAccumulated(0)
     , mSamplesBetweenClicks(0)
     , mGain(gain)
+    , mBeatPercentage(beatPercentage)
+    , mReversed(reversed)
 {
 }
 
 void SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToFill)
 {
-    auto numInputChannels = mClickSoundBuffer->getNumChannels();
     auto numOutChannels = bufferToFill.buffer->getNumChannels();
     
     auto numSamples = bufferToFill.numSamples;
@@ -32,6 +33,8 @@ void SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToF
         if (!mIsPlaying && mSamplesAccumulated == mSamplesBetweenClicks) {
             mIsPlaying = true;
             mSamplesAccumulated = 0;
+            auto localReversed = mReversed.load();
+            mReversed = !localReversed;
         }
         
         for ( auto channel = 0; channel < numOutChannels; ++channel) {
@@ -47,7 +50,6 @@ void SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToF
         
         mSamplesAccumulated++;
         outputSamplesOffset++;
-        
         numSamples--;
         
         // Update mIsPlaying
@@ -56,6 +58,7 @@ void SamplePlayback::processBuffer(const juce::AudioSourceChannelInfo& bufferToF
             mSampleIndex = 0;
         }
     }
+    mBeatPercentage = static_cast<double>(mSamplesAccumulated) / static_cast<double>(mSamplesBetweenClicks);
 }
 
 void SamplePlayback::setSampleRate(const double sampleRate)
@@ -70,6 +73,8 @@ void SamplePlayback::tempoChanged(const int newTempo)
     mSamplesBetweenClicks = samplesPerClick(newTempo);
     mSampleIndex = 0;
     mSamplesAccumulated = 0;
+    mBeatPercentage = 0.0;
+    mReversed = false;
     mIsPlaying = false;
 }
 
@@ -77,6 +82,8 @@ void SamplePlayback::resetSamplePlayback()
 {
     mSampleIndex = 0;
     mSamplesAccumulated = 0;
+    mBeatPercentage = 0.0;
+    mReversed = false;
     mIsPlaying = false;
 }
 
