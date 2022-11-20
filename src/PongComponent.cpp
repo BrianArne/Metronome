@@ -63,9 +63,18 @@ PongComponent::State PongComponent::getState()
 
 int PongComponent::calcX()
 {
+    bool max = false;
+    if (mBeatPercentage.load() > .95)
+        max = true;
     if (mReversed.load()){
+        if (max){
+            return static_cast<int>((getWidth()-GRADIENT_WIDTH) * 0.0);
+        }
         return static_cast<int>((getWidth()-GRADIENT_WIDTH) * (1.0 - mBeatPercentage.load()));
     }else{
+        if (max){
+            return static_cast<int>((getWidth()-GRADIENT_WIDTH) * 1.0);
+        }
         return static_cast<int>((getWidth()-GRADIENT_WIDTH) * mBeatPercentage.load());
     }
 }
