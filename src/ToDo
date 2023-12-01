@@ -1,16 +1,22 @@
-///////////
-// TODO  //
-///////////
+I don't think we unify MainComponent and SamplePlayback
+  - Maybe juce audio processor node? ProcessorTree
 
-- Implement SamplePlayBack
-- Implement Gain
-- Implement click that doesn't stop when a button is pressed // tempo is updated
-  - onValueChanged() -> update SamplePlayBack or MainComponent::samplesPerClick
+Invert tempo change, change engine and GUI responds
+  - Keys call engine funcs and engine clamps vals
+
+Remove states, why was this here in the first place
+
+Continuous click so that SamplePlayback updates samples between on tempo change
 
 
-///////////
-// IDEAS //
-///////////
 
--Make the color change as the tempo increases
+Talk:
+
+Install juce
+Setting up cmake
+Juce Binary Data for click data
+A word about unity/jumbo builds
+Look and feel for metronome
+Listeners and callbacks for sliders, textboxes, buttons
+Process block and sample counting
 

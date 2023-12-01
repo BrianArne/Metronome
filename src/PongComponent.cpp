@@ -64,6 +64,7 @@ PongComponent::State PongComponent::getState()
 int PongComponent::calcX()
 {
     bool max = false;
+    // Is this needed?
     if (mBeatPercentage.load() > .95)
         max = true;
     if (mReversed.load()){
